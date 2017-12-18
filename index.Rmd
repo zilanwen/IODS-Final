@@ -40,8 +40,8 @@ The questions are about to be explored as following:
 
 Linear regression is an approach for modeling the relationship between a dependent variables *y* and one or more explanatory variables *X*.
  
-In a simple case, the model includes one explanatory variable x: $y = a + bx + c $  R: lm(y ~ x).   
-In multiple regression, the modle can include more than one explanatory variables: $ y = a + b1x1+b2x2 + c $. R: lm(y ~ x1 + x2)
+In a simple case, the model includes one explanatory variable x: $y = a + bx + c$  R: lm(y ~ x).   
+In multiple regression, the modle can include more than one explanatory variables: $y = a + b1x1+b2x2 + c$. R: lm(y ~ x1 + x2)
 
 ### 3.2 Linear discriminant analysis
 
@@ -51,12 +51,13 @@ Linear discriminant analysis is a classification (and dimension reduction) metho
 The Multiple correspondence analysis (MCA) is an extension of the simple correspondence analysis  for summarizing and visualizing a data table containing more than two categorical variables.MCA is generally used to analyse a data set from survey. The goal is to identify:
 
 * A group of individuals with similar profile in their answers to the questions
+
 * The associations between variable categories
 
 ## 4. Data analysis  
 
 ### 4.1 Regression and model validation
-The data wrangling is [here]()
+The data wrangling is [here](https://github.com/Tianwaibian/IODS-Final/blob/master/create_alc_Grade.R)
 
 ```{R}
 getwd()
@@ -102,7 +103,7 @@ plot(model2, which=c(1,2,5))
 The Residuals vs Fitted values plot examines if the errors have constant variance. The graph shows a reasonable constant variance without any pattern. The Normal QQ-polt checks if the errors are normally distributed. We see from the graph a very good linear model fit, indicating a normally distributed error set. The Residuals vs Leverage confirms if there are any outliers with high leverage. From the graph, it shows that all the leverage are below 0.2, indicating good model fitting.
 
 ### 4.2 Linear discriminant analysis
-
+The data wrangling is [here](https://github.com/Tianwaibian/IODS-Final/blob/master/create_alc_3G.R)
 ```{R}
 getwd()
 library(readr)
@@ -110,26 +111,42 @@ alc_3G <- read_csv('alc_3G.txt')
 str(alc_3G)
 dim(alc_3G)
 ```
-The alcGrade data is about students performance, 13 variables used to assess students performance are as following:   
+The alcGrade data is about students performance, 13 variables used to assess students performance are as following:
+
 * `age`  student's age (numeric: from 15 to 22) 
-* `Medu` mother's education (numeric: 0 - none, 1 - primary education (4th grade), 2 ????" 5th to 9th grade, 3 ????" secondary education or 4 ????" higher education) 
-* `Fedu` father's education (numeric: 0 - none, 1 - primary education (4th grade), 2 ????" 5th to 9th grade, 3 ????" secondary education or 4 ????" higher education)
+
+* `Medu` mother's education 
+
+* `Fedu` father's education 
+
 * `traveltime` home to school travel time (numeric: 1 - <15 min., 2 - 15 to 30 min., 3 - 30 min. to 1 hour, or 4 - >1 hour) 
+
 * `studytime` weekly study time (numeric: 1 - <2 hours, 2 - 2 to 5 hours, 3 - 5 to 10 hours, or 4 - >10 hours) 
+
 * `failures` number of past class failures (numeric: n if 1<=n<3, else 4) 
+
 * `famrel` quality of family relationships (numeric: from 1 - very bad to 5 - excellent) 
+
 * `freetime` free time after school (numeric: from 1 - very low to 5 - very high) 
+
 * `goout`  going out with friends (numeric: from 1 - very low to 5 - very high) 
+
 * `health`  current health status (numeric: from 1 - very bad to 5 - very good) 
+
 * `absences` number of school absences (numeric: from 0 to 93) 
+
 * `alc_use` the average of workday and weekend alcohol consumption
+
 * `G1` first period grade (numeric: from 0 to 20) 
+
 * `G2` second period grade (numeric: from 0 to 20) 
+
 * `G3` final grade (numeric: from 0 to 20, output target)
 
 ```{R}
 summary(alc_3G)
 ```
+
 * distributions of the variables
 
 ```{R}
@@ -140,19 +157,26 @@ gather(selected_variables) %>% ggplot(aes(value)) + facet_wrap("key", scales = "
 cor_matrix<-cor(alc_3G) %>% round(2)
 cor_matrix
 ```
+
 * visualize the correlation matrix
+
 ```{R}
 library(corrplot)
 corrplot(cor_matrix, method="circle", type = 'upper', cl.pos ="b", tl.pos = 'd', tl.cex = 0.6)
 ```
 
 From the plot, we can see that:  
+
 * `G3`  has a strong correlation with attributes `G2` and `G3`. 
+
 * Mother's education `Medu` has a strong correlation with `Fedu`(Father's education). 
+
 * `Failures` are negatively related to `G1`, `G2` and `G3`.
+
 * `Fedu`, `Medu` and `studytime` have a weakly positive correlation with the grades variables.  
 
 * Standardize the dataset and print out summaries of the scaled data.
+
 ```{R}
 alc_3G_scaled <- scale(alc_3G)
 summary(alc_3G_scaled)
@@ -168,11 +192,14 @@ bins
 ```
 
 * create a categorical variable 'G3'
+
 ```{R}
 Grade3 <- cut(alc_3G_scaled$G3, breaks = bins, include.lowest = TRUE, label = c('low', 'med_low', 'med_high', 'high'))
 table(Grade3)
 ```
+
 * train sets
+
 ```{R}
 alc_3G_scaled <- dplyr::select(alc_3G_scaled, -G3)
 alc_3G_scaled <- data.frame(alc_3G_scaled, Grade3)
@@ -183,7 +210,9 @@ train <- alc_3G_scaled[ind,]
 ```
 
 * linear discriminant analysis
+
 * linear discriminant analysis on the train set
+
 ```{R}
 library(MASS)
 lda.fit <- lda(Grade3 ~ ., data = train)
@@ -219,7 +248,7 @@ table(correct=correct_classes,predicted=lda.pred$class) %>% addmargins
 From the cross table we can see that the model could give relatively good predictions of the G3.   
 
 ### 4.3 MCA 
-The data `Alc_MCA` is for MCA analysis.The data wrangling script is in the file named `Alc_MCA.R`
+The data `Alc_MCA` is for MCA analysis.The data wrangling script is in the file named `Alc_MCA.R`. The data wrangling is [here](https://github.com/Tianwaibian/IODS-Final/blob/master/alc_MCA.R)
 
 ```{R}
 library(readr)
@@ -246,6 +275,7 @@ summary(alc_mca)
 ```
 
 * visualize MCA
+
 ```{R}
 plot(alc_mca, invisible=c("ind"), habillage = "quali")
 ```
@@ -256,11 +286,14 @@ The MCA biplot shows how similar the variables are with each other.It seems that
 ## 5. Conclusion
 
 To conclude, the Data 'student alcohol consumption' are performed by three methods, including linear regression, LDA and MCA. The results show that : 
-* In linear regression analysis, the `Grade` is significantly related to `Medu`, `traveltime`,`studytime`, `failures`,`goout`,`heath` and `absences`.   
+
+* In linear regression analysis, the `Grade` is significantly related to `Medu`, `traveltime`,`studytime`, `failures`,`goout`,`heath` and `absences`.  
+
 * In linear discriminant analysis,       
    `G3`  has a strong correlation with attributes `G2` and `G3`.    
     Mother's education `Medu` has a strong correlation with `Fedu`(Father's education).    
     `Failures` are negatively related to `G1`, `G2` and `G3`.    
-    `Fedu`, `Medu` and `studytime` have a weakly positive correlation with the grades variables.    
+    `Fedu`, `Medu` and `studytime` have a weakly positive correlation with the grades variables.   
+    
 * In MCA analysis, 'low use of alcohol', 'great than three family size', 'living together' and guardian by mother' are very similar.
 
